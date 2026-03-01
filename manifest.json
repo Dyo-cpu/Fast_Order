@@ -1,0 +1,16 @@
+{
+  "short_name": "OrderSales",
+  "name": "Kalkulator Pesanan Sales",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./sales_calculator.html",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff"
+}
+

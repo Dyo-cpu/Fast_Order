@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Order</title>
+    
+    <!-- Meta untuk Ikon Aplikasi -->
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <meta name="theme-color" content="#2563eb"> <!-- Warna Biru di Bar HP -->
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #eee; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-2xl mx-auto">
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-gray-800">Pencatatan Orderan</h1>
+            <p class="text-gray-500 text-sm">Input pesanan dengan mudah via HP/Laptop</p>
+        </header>
+
+        <div id="product-container" class="space-y-4">
+            <!-- Data produk akan muncul di sini -->
+        </div>
+
+        <div class="mt-8 sticky bottom-4 z-10">
+            <div class="card p-5 border-t-4 border-blue-600 shadow-xl bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-medium">Total Keseluruhan:</span>
+                    <span class="text-2xl font-bold text-blue-600" id="grand-total">Rp 0</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 no-print">
+                    <button onclick="resetCalculator()" class="py-3 px-4 rounded-xl border border-red-200 text-red-600 font-semibold text-sm hover:bg-red-50 transition">
+                        Reset
+                    </button>
+                    <button onclick="window.print()" class="py-3 px-4 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 shadow-md transition">
+                        Cetak / Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-8 mb-12 text-center text-xs text-gray-400 no-print">
+            &copy; 2024 Sales Finance System
+        </footer>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, name: "Abon Glatik 250gr", price: 5500 },
+            { id: 2, name: "Abon Raja Sapi 125gr", price: 12500 },
+            { id: 3, name: "Abon Wahid A 125gr", price: 16000 },
+            { id: 4, name: "Abon Istimewa 125gr", price: 17000 },
+            { id: 5, name: "Madu Murni 100gr", price: 18500 },
+            { id: 6, name: "Madu Murni 125gr", price: 22500 },
+            { id: 7, name: "Madu Murni 200gr", price: 32000 },
+            { id: 8, name: "Madu Murni 350gr", price: 65000 },
+            { id: 9, name: "Madu Murni 825gr", price: 120000 },
+            { id: 10, name: "Stik Bawang 200gr", price: 12500 },
+            { id: 11, name: "Stik Bawang 250gr", price: 15000 }
+        ];
+
+        let cart = products.map(p => ({ ...p, quantity: 0 }));
+
+        function renderView() {
+            const container = document.getElementById('product-container');
+            container.innerHTML = '';
+
+            let grandTotal = 0;
+
+            cart.forEach((item, index) => {
+                const totalItemPrice = item.quantity * item.price;
+                grandTotal += totalItemPrice;
+
+                const productCard = document.createElement('div');
+                productCard.className = "card p-4 flex flex-col space-y-3 border border-gray-100";
+                productCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold text-blue-500 uppercase tracking-wider">Produk #${index + 1}</span>
+                            <h3 class="text-lg font-bold text-gray-800">${item.name}</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-400 block uppercase">Subtotal</span>
+                            <span class="font-bold text-gray-700">${formatRupiah(totalItemPrice)}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 items-end pt-2 border-t border-gray-50">
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1 uppercase font-semibold">Kuantitas</label>
+                            <div class="flex items-center bg-gray-50 rounded-lg p-1 w-fit">
+                                <button onclick="updateQty(${index}, -1)" class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition text-xl font-bold">-</button>
+                                <span class="w-12 text-center font-bold text-lg">${item.quantity}</span>
+                                <button onclick="updateQty(${index}, 1)" class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition text-xl font-bold">+</button>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <label class="text-xs text-gray-500 block mb-1 uppercase font-semibold">Harga Satuan (Rp)</label>
+                            <input type="number" value="${item.price}" onchange="updatePrice(${index}, this.value)" 
+                                class="w-full bg-gray-50 border-none text-right rounded-lg p-2 font-semibold text-gray-700 focus:ring-2 focus:ring-blue-100 transition">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(productCard);
+            });
+
+            document.getElementById('grand-total').innerText = formatRupiah(grandTotal);
+        }
+
+        function updateQty(index, delta) {
+            const newQty = cart[index].quantity + delta;
+            if (newQty >= 0) {
+                cart[index].quantity = newQty;
+                renderView();
+            }
+        }
+
+        function updatePrice(index, value) {
+            const newPrice = parseInt(value) || 0;
+            cart[index].price = newPrice;
+            renderView();
+        }
+
+        function resetCalculator() {
+            cart = products.map(p => ({ ...p, quantity: 0 }));
+            renderView();
+        }
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        }
+
+        window.onload = renderView;
+    </script>
+
+</body>
+</html>
