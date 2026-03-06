@@ -8,87 +8,177 @@
     <!-- Meta untuk Ikon Aplikasi -->
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
-    <meta name="theme-color" content="#2563eb"> <!-- Warna Biru di Bar HP -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #f9fafb;
+            background-color: #f3f4f6;
             font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
         .card {
             background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .product-img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            background-color: #f9fafb;
         }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+        .nav-item.active {
+            color: #2563eb;
+        }
+        .nav-item.active svg {
+            fill: #2563eb;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
         @media print {
-            .no-print { display: none; }
+            .no-print { display: none !important; }
             body { background: white; padding: 0; }
-            .card { box-shadow: none; border: 1px solid #eee; }
+            .card { box-shadow: none; border: 1px solid #eee; margin-bottom: 10px; }
+            .page { display: none !important; }
+            #order-page { display: block !important; }
+            .fixed { position: static !important; }
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-8 pb-32">
 
     <div class="max-w-2xl mx-auto">
-        <header class="mb-6 text-center">
-            <h1 class="text-2xl font-bold text-gray-800">Pencatatan Orderan</h1>
-            <p class="text-gray-500 text-sm">Input pesanan dengan mudah via HP/Laptop</p>
+        <!-- Header -->
+        <header class="mb-6 flex items-center justify-between no-print">
+            <div>
+                <h1 id="page-title" class="text-2xl font-bold text-gray-800 tracking-tight">Order Sales</h1>
+                <p class="text-gray-500 text-sm italic">Pencatatan Pesanan Real-time</p>
+            </div>
+            <div class="bg-blue-100 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+            </div>
         </header>
 
-        <div id="product-container" class="space-y-4">
-            <!-- Data produk akan muncul di sini -->
-        </div>
+        <!-- HALAMAN 1: INPUT ORDER -->
+        <div id="order-page" class="page active">
+            <!-- Container Produk -->
+            <div id="product-container" class="space-y-3">
+                <!-- Produk akan muncul di sini -->
+            </div>
 
-        <div class="mt-8 sticky bottom-4 z-10">
-            <div class="card p-5 border-t-4 border-blue-600 shadow-xl bg-white">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-600 font-medium">Total Keseluruhan:</span>
-                    <span class="text-2xl font-bold text-blue-600" id="grand-total">Rp 0</span>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3 no-print">
-                    <button onclick="resetCalculator()" class="py-3 px-4 rounded-xl border border-red-200 text-red-600 font-semibold text-sm hover:bg-red-50 transition">
-                        Reset
-                    </button>
-                    <button onclick="window.print()" class="py-3 px-4 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 shadow-md transition">
-                        Cetak / Simpan
-                    </button>
+            <!-- Panel Total (Sticky Bottom) -->
+            <div class="fixed bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-gray-100 via-gray-100 to-transparent no-print">
+                <div class="max-w-2xl mx-auto">
+                    <div class="card p-5 border-t-4 border-blue-600 shadow-2xl bg-white">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-500 font-medium text-sm">Total Estimasi:</span>
+                            <span class="text-2xl font-black text-blue-600" id="grand-total">Rp 0</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="resetCalculator()" class="py-3 px-4 rounded-xl border border-red-100 text-red-500 font-bold text-sm hover:bg-red-50">Reset</button>
+                            <button onclick="saveAndPrint()" class="py-3 px-4 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow-lg flex justify-center items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                Simpan/Cetak
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <footer class="mt-8 mb-12 text-center text-xs text-gray-400 no-print">
-            &copy; 2024 Sales Finance System
+        <!-- HALAMAN 2: RIWAYAT -->
+        <div id="history-page" class="page">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h2 class="text-sm font-bold text-gray-500 uppercase">Riwayat Tersimpan</h2>
+                <button onclick="clearAllHistory()" class="text-[10px] font-bold text-red-500 hover:text-red-700 underline">Hapus Semua</button>
+            </div>
+            <div id="history-container" class="space-y-3">
+                <!-- Riwayat akan dimuat dari LocalStorage -->
+            </div>
+        </div>
+
+        <!-- NAVIGATION BAR (Fixed Bottom) -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-2 no-print">
+            <div class="max-w-2xl mx-auto flex justify-around">
+                <button onclick="switchPage('order')" id="nav-order" class="nav-item active flex flex-col items-center gap-1 py-1 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Input Order</span>
+                </button>
+                <button onclick="switchPage('history')" id="nav-history" class="nav-item flex flex-col items-center gap-1 py-1 transition-colors text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Riwayat</span>
+                </button>
+            </div>
+        </nav>
+
+        <footer class="mt-8 mb-4 text-center text-xs text-gray-400 no-print">
+            Sistem Keuangan Sales &copy; 2024
         </footer>
     </div>
 
     <script>
         const products = [
-            { id: 1, name: "Abon Glatik 250gr", price: 5500 },
-            { id: 2, name: "Abon Raja Sapi 125gr", price: 12500 },
-            { id: 3, name: "Abon Wahid A 125gr", price: 16000 },
-            { id: 4, name: "Abon Istimewa 125gr", price: 17000 },
-            { id: 5, name: "Madu Murni 100gr", price: 18500 },
-            { id: 6, name: "Madu Murni 125gr", price: 22500 },
-            { id: 7, name: "Madu Murni 200gr", price: 32000 },
-            { id: 8, name: "Madu Murni 350gr", price: 65000 },
-            { id: 9, name: "Madu Murni 825gr", price: 120000 },
-            { id: 10, name: "Stik Bawang 200gr", price: 12500 },
-            { id: 11, name: "Stik Bawang 250gr", price: 15000 }
+            { id: 1, name: "Abon Glatik 250gr", price: 5750, img: "Aset/abon_glatik.jpg" },
+            { id: 2, name: "Abon Raja Sapi 125gr", price: 12500, img: "Aset/abon_raja.jpg" },
+            { id: 3, name: "Abon Wahid A 125gr", price: 15500, img: "Aset/abon_wahid.jpg" },
+            { id: 4, name: "Abon Istimewa 125gr", price: 17000, img: "Aset/abon_istimewa.jpg" },
+            { id: 5, name: "Madu Murni 100gr", price: 18500, img: "Aset/madu_100.jpg" },
+            { id: 6, name: "Madu Murni 125gr", price: 22500, img: "Aset/madu_125.jpg" },
+            { id: 7, name: "Madu Murni 200gr", price: 32000, img: "Aset/madu_200.jpg" },
+            { id: 8, name: "Madu Murni 350gr", price: 65000, img: "Aset/madu_350.jpg" },
+            { id: 9, name: "Madu Murni 825gr", price: 120000, img: "Aset/madu_825.jpg" },
+            { id: 10, name: "Stik Bawang 200gr", price: 12500, img: "Aset/stik_200.jpg" },
+            { id: 11, name: "Stik Bawang 250gr", price: 15000, img: "Aset/stik_250.jpg" }
         ];
 
         let cart = products.map(p => ({ ...p, quantity: 0 }));
+        let history = JSON.parse(localStorage.getItem('sales_history')) || [];
+
+        // Fungsi Ganti Halaman
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.remove('active');
+                n.classList.add('text-gray-400');
+            });
+
+            if (pageName === 'order') {
+                document.getElementById('order-page').classList.add('active');
+                document.getElementById('nav-order').classList.add('active');
+                document.getElementById('nav-order').classList.remove('text-gray-400');
+                document.getElementById('page-title').innerText = "Order Sales";
+            } else {
+                document.getElementById('history-page').classList.add('active');
+                document.getElementById('nav-history').classList.add('active');
+                document.getElementById('nav-history').classList.remove('text-gray-400');
+                document.getElementById('page-title').innerText = "Riwayat Order";
+                renderHistory();
+            }
+            window.scrollTo(0, 0);
+        }
 
         function renderView() {
             const container = document.getElementById('product-container');
             container.innerHTML = '';
-
             let grandTotal = 0;
 
             cart.forEach((item, index) => {
@@ -96,40 +186,65 @@
                 grandTotal += totalItemPrice;
 
                 const productCard = document.createElement('div');
-                productCard.className = "card p-4 flex flex-col space-y-3 border border-gray-100";
+                productCard.className = "card p-3 border border-gray-100 flex gap-4 items-center";
                 productCard.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-xs font-bold text-blue-500 uppercase tracking-wider">Produk #${index + 1}</span>
-                            <h3 class="text-lg font-bold text-gray-800">${item.name}</h3>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-xs text-gray-400 block uppercase">Subtotal</span>
-                            <span class="font-bold text-gray-700">${formatRupiah(totalItemPrice)}</span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 items-end pt-2 border-t border-gray-50">
-                        <div>
-                            <label class="text-xs text-gray-500 block mb-1 uppercase font-semibold">Kuantitas</label>
-                            <div class="flex items-center bg-gray-50 rounded-lg p-1 w-fit">
-                                <button onclick="updateQty(${index}, -1)" class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition text-xl font-bold">-</button>
-                                <span class="w-12 text-center font-bold text-lg">${item.quantity}</span>
-                                <button onclick="updateQty(${index}, 1)" class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center hover:bg-gray-100 active:scale-95 transition text-xl font-bold">+</button>
+                    <img src="${item.img}" alt="${item.name}" class="product-img" onerror="this.src='https://via.placeholder.com/80?text=Produk'">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-sm leading-tight">${item.name}</h3>
+                                <p class="text-[10px] text-blue-500 font-semibold">${formatRupiah(item.price)}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-xs text-gray-700">${formatRupiah(totalItemPrice)}</span>
                             </div>
                         </div>
-
-                        <div class="text-right">
-                            <label class="text-xs text-gray-500 block mb-1 uppercase font-semibold">Harga Satuan (Rp)</label>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                                <button onclick="updateQty(${index}, -1)" class="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center hover:bg-gray-200 active:scale-90 transition font-bold text-gray-600">-</button>
+                                <span class="w-8 text-center font-bold text-xs">${item.quantity}</span>
+                                <button onclick="updateQty(${index}, 1)" class="w-7 h-7 rounded-md bg-white shadow-sm flex items-center justify-center hover:bg-gray-200 active:scale-90 transition font-bold text-gray-600">+</button>
+                            </div>
                             <input type="number" value="${item.price}" onchange="updatePrice(${index}, this.value)" 
-                                class="w-full bg-gray-50 border-none text-right rounded-lg p-2 font-semibold text-gray-700 focus:ring-2 focus:ring-blue-100 transition">
+                                class="w-16 bg-transparent border-b border-gray-200 text-right text-[10px] font-semibold text-gray-400 focus:border-blue-400 outline-none transition">
                         </div>
                     </div>
                 `;
                 container.appendChild(productCard);
             });
-
             document.getElementById('grand-total').innerText = formatRupiah(grandTotal);
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if (history.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-sm italic text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200">Belum ada riwayat pesanan.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            history.slice().reverse().forEach((record, index) => {
+                const historyCard = document.createElement('div');
+                historyCard.className = "card p-4 border border-blue-50 bg-white mb-3";
+                
+                let detailsHtml = record.items.map(it => 
+                    `<div class="flex justify-between text-[11px] text-gray-600">
+                        <span>${it.name} (${it.quantity}x)</span>
+                        <span>${formatRupiah(it.quantity * it.price)}</span>
+                    </div>`
+                ).join('');
+
+                historyCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
+                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wide">${record.timestamp}</span>
+                        <span class="text-sm font-black text-gray-800">${formatRupiah(record.total)}</span>
+                    </div>
+                    <div class="space-y-1">
+                        ${detailsHtml}
+                    </div>
+                `;
+                container.appendChild(historyCard);
+            });
         }
 
         function updateQty(index, delta) {
@@ -141,26 +256,63 @@
         }
 
         function updatePrice(index, value) {
-            const newPrice = parseInt(value) || 0;
-            cart[index].price = newPrice;
+            cart[index].price = parseInt(value) || 0;
             renderView();
         }
 
         function resetCalculator() {
-            cart = products.map(p => ({ ...p, quantity: 0 }));
-            renderView();
+            if(confirm("Hapus data inputan saat ini?")) {
+                cart = products.map(p => ({ ...p, quantity: 0 }));
+                renderView();
+            }
+        }
+
+        function saveAndPrint() {
+            const itemsToSave = cart.filter(item => item.quantity > 0);
+            if (itemsToSave.length === 0) {
+                alert("Pilih minimal satu produk.");
+                return;
+            }
+
+            const total = itemsToSave.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            const now = new Date();
+            const timestamp = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) + ', ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            const newRecord = {
+                timestamp: timestamp,
+                items: JSON.parse(JSON.stringify(itemsToSave)),
+                total: total
+            };
+
+            history.push(newRecord);
+            
+            // SIMPAN KE LOCALSTORAGE
+            localStorage.setItem('sales_history', JSON.stringify(history));
+
+            window.print();
+            
+            // Switch ke history untuk melihat hasil
+            switchPage('history');
+        }
+
+        function clearAllHistory() {
+            if(confirm("Yakin ingin menghapus SEMUA riwayat secara permanen?")) {
+                history = [];
+                localStorage.removeItem('sales_history');
+                renderHistory();
+            }
         }
 
         function formatRupiah(number) {
             return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
+                style: 'currency', currency: 'IDR', minimumFractionDigits: 0
             }).format(number);
         }
 
-        window.onload = renderView;
+        window.onload = () => {
+            renderView();
+            renderHistory();
+        };
     </script>
-
 </body>
 </html>
