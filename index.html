@@ -48,6 +48,10 @@
         .page.active {
             display: block;
         }
+         /* Tambahan CSS untuk memperbaiki masalah overlapping */
+        #product-container {
+            padding-bottom: 40px; /* Ruang ekstra agar produk terakhir tidak tertutup kartu total */
+        }
         @media print {
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
